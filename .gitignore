@@ -103,3 +103,5 @@ ENV/
 # pycharm
 .idea
 .idea/
+
+snapshot/

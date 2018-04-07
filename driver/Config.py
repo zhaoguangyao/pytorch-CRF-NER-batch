@@ -17,14 +17,15 @@ class Configurable(object):
                     config.set(section, k, v)
 
         self._config = config
-        if not os.path.isdir(self.save_dir):
-            os.mkdir(self.save_dir)
-        config.write(open(self.config_file, 'w'))
+        # if not os.path.isdir(self.save_dir):
+        #     os.mkdir(self.save_dir)
+        # config.write(open(self.config_file, 'w'))
         print('Load config file successfully.\n')
         for section in config.sections():
             for k, v in config.items(section):
                 print(k, v)
 
+# Data
     @property
     def data_dir(self):
         return self._config.get('Data', 'data_dir')
@@ -42,32 +43,57 @@ class Configurable(object):
         return self._config.get('Data', 'test_file')
 
     @property
-    def shuffle(self):
-        return self._config.getboolean('Data', 'shuffle')
-
-    @property
     def vocab_size(self):
         return self._config.getint('Data', 'vocab_size')
 
     @property
-    def save_dir(self):
-        return self._config.get('Save', 'save_dir')
+    def max_length(self):
+        return self._config.getint('Data', 'max_length')
 
     @property
-    def config_file(self):
-        return self._config.get('Save', 'config_file')
+    def percentile(self):
+        return self._config.getint('Data', 'percentile')
+
+    @property
+    def shuffle(self):
+        return self._config.getboolean('Data', 'shuffle')
+
+# Save
+    @property
+    def save_dir(self):
+        return self._config.get('Save', 'save_dir')
 
     @property
     def save_model_path(self):
         return self._config.get('Save', 'save_model_path')
 
     @property
-    def save_src_vocab_path(self):
-        return self._config.get('Save', 'save_src_vocab_path')
+    def save_feature_voc(self):
+        return self._config.get('Save', 'save_feature_voc')
 
     @property
-    def save_tgt_vocab_path(self):
-        return self._config.get('Save', 'save_tgt_vocab_path')
+    def save_label_voc(self):
+        return self._config.get('Save', 'save_label_voc')
+
+    @property
+    def train_pkl(self):
+        return self._config.get('Save', 'train_pkl')
+
+    @property
+    def dev_pkl(self):
+        return self._config.get('Save', 'dev_pkl')
+
+    @property
+    def test_pkl(self):
+        return self._config.get('Save', 'test_pkl')
+
+    @property
+    def embedding_file(self):
+        return self._config.get('Save', 'embedding_file')
+
+    @property
+    def embedding_pkl(self):
+        return self._config.get('Save', 'embedding_pkl')
 
     @property
     def load_dir(self):
@@ -78,17 +104,14 @@ class Configurable(object):
         return self._config.get('Save', 'load_model_path')
 
     @property
-    def load_src_vocab_path(self):
-        return self._config.get('Save', 'load_src_vocab_path')
+    def load_feature_voc(self):
+        return self._config.get('Save', 'load_feature_voc')
 
     @property
-    def load_tgt_vocab_path(self):
-        return self._config.get('Save', 'load_tgt_vocab_path')
+    def load_label_voc(self):
+        return self._config.get('Save', 'load_label_voc')
 
-    @property
-    def embedding_file(self):
-        return self._config.get('Network', 'embedding_file')
-
+# Network
     @property
     def embed_dim(self):
         return self._config.getint('Network', 'embed_dim')
@@ -156,7 +179,3 @@ class Configurable(object):
     @property
     def save_after(self):
         return self._config.getint('Run', 'save_after')
-
-
-
-

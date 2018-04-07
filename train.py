@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import os
 import torch
 import random
 import argparse
 import numpy as np
+from torch.utils.data import DataLoader
 from driver.Config import Configurable
+from driver.IO import *
+from driver.Split import *
 
 
 if __name__ == '__main__':
@@ -21,9 +25,9 @@ if __name__ == '__main__':
 
     # parameters
     parse = argparse.ArgumentParser('NER')
-    parse.add_argument('--config_file', default='default.ini')
+    parse.add_argument('--config_file', default='default.ini', type=str)
     parse.add_argument('--thread', default=1, type=int)
-    parse.add_argument('--use_cuda', action='store_true', default=True)
+    parse.add_argument('--use_cuda', action='store_true', default=False)
     args, extra_args = parse.parse_known_args()
 
     config = Configurable(args.config_file, extra_args)
@@ -33,6 +37,37 @@ if __name__ == '__main__':
         config.use_cuda = True
     print("\nGPU using status: ", config.use_cuda)
 
-    # data vocab embedding
+    # DataLoader
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
