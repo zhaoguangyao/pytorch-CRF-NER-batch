@@ -110,7 +110,7 @@ class VocabSrc:
 class VocabTgt:
     def __init__(self, word_list):
         # 构建label voc, 从1开始编号, 0表示padding值
-        self.i2w = word_list
+        self.i2w = [PAD] + word_list
         self.w2i = {}
         for idx, word in enumerate(self.i2w):
             self.w2i[word] = idx

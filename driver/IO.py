@@ -32,14 +32,14 @@ def read_word_line(path, is_train=False):
         is_train: 判断是否是train集
     Return:
         data: list
-        sentence_len: list
+        sentence_len: dict
         feature_dict: dict
-        label_dict: set
+        label_dict: dict
     """
     data = []
     sentence_len = Counter()
     feature_dict = Counter()
-    label_set = set()
+    label_dict = Counter()
     with open(path, 'r', encoding='utf-8') as input_file:
         sentence = []
         label = []
@@ -56,12 +56,12 @@ def read_word_line(path, is_train=False):
                 label.append(strings[1])
                 if is_train:
                     feature_dict[strings[0]] += 1
-                    label_set.add(strings[1])
+                    label_dict[strings[1]] += 1
         if len(sentence) != 0:
             data.append((sentence, label))
     print('实例个数有: ', len(data))
     if is_train:
-        return data, sentence_len, feature_dict, label_set
+        return data, sentence_len, feature_dict, label_dict
     return data, sentence_len
 
 

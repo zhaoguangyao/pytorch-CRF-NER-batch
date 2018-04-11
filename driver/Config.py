@@ -117,6 +117,14 @@ class Configurable(object):
         return self._config.getint('Network', 'embed_dim')
 
     @property
+    def lstm(self):
+        return self._config.getint('Network', 'lstm')
+
+    @property
+    def layer_nums(self):
+        return self._config.getint('Network', 'layer_nums')
+
+    @property
     def hidden_size(self):
         return self._config.getint('Network', 'hidden_size')
 
