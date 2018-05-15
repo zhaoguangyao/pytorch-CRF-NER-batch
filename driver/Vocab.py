@@ -8,6 +8,7 @@ PAD_S, UNK_S = '<pad>', '<unk>'
 
 class VocabSrc:
     def __init__(self, word_list):
+        # no fine tune
         self._id2extword = [PAD_S, UNK_S]
 
         self.i2w = [PAD_S, UNK_S] + word_list
@@ -87,6 +88,7 @@ class VocabSrc:
         embeddings = np.zeros((len(self.i2w), embedding_dim))
         with open(embfile, encoding='utf-8') as f:
             for line in f:
+                line = line.strip()
                 values = line.split(' ')
                 if values[0] in self.w2i:
                     vector = np.array(values[1:], dtype='float64')
@@ -104,7 +106,7 @@ class VocabSrc:
 
         print('oov ratio: {:.4f}'.format(oov_ratio))
 
-        return embeddings
+        return (embeddings, embedding_dim)
 
 
 class VocabTgt:
@@ -119,8 +121,8 @@ class VocabTgt:
 
     def word2id(self, xx):
         if isinstance(xx, list):
-            return [self.w2i[word] for word in xx]
-        return self.w2i[xx]
+            return [self.w2i.get(word, PAD) for word in xx]
+        return self.w2i.get(xx, PAD)
 
     def id2word(self, xx):
         if isinstance(xx, list):

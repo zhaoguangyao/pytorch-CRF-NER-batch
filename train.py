@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
-
+import os
 import torch
+import numpy
 import random
 import argparse
-from torch.utils.data import DataLoader
+from driver.MyIO import read_pkl
+from driver.Vocab import VocabSrc, VocabTgt, PAD
 from driver.Config import Configurable
-from driver.IO import *
-from driver.DataLoader import *
-from driver.Train import *
+from driver.Train import train
+from TorchNN import *
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["OMP_NUM_THREADS"] = "1"
 
-from torch.autograd import Variable
 
 if __name__ == '__main__':
     # random
     torch.manual_seed(666)
     torch.cuda.manual_seed(666)
     random.seed(666)
-    np.random.seed(666)
+    numpy.random.seed(666)
 
     # gpu
     gpu = torch.cuda.is_available()
@@ -40,29 +42,24 @@ if __name__ == '__main__':
 
     # load data
     train_data = read_pkl(config.train_pkl)
-    # dev_data = read_pkl(config.dev_pkl)
+    dev_data = read_pkl(config.dev_pkl)
     test_data = read_pkl(config.test_pkl)
 
-    feature_vec = read_pkl(config.load_feature_voc)
-    label_vec = read_pkl(config.load_label_voc)
+    feature_list = read_pkl(config.load_feature_voc)
+    label_list = read_pkl(config.load_label_voc)
+    feature_voc = VocabSrc(feature_list)
+    label_voc = VocabTgt(label_list)
 
+    embedding = None
     if os.path.isfile(config.embedding_pkl):
         embedding = read_pkl(config.embedding_pkl)
 
-    # DataLoader
-    train_dataset = SentenceDataset(train_data, config.max_length, feature_vec, label_vec)
-    # dev_dataset = SentenceDataset(dev_data, config.max_length, feature_vec, label_vec)
-    test_dataset = SentenceDataset(test_data, config.max_length, feature_vec, label_vec)
-
-    data_loader_train = DataLoader(
-        train_dataset, batch_size=config.batch_size, shuffle=True, num_workers=args.thread)
-    # data_loader_dev = DataLoader(
-    #     dev_dataset, batch_size=config.batch_size, shuffle=False, num_workers=args.thread)
-    data_loader_test = DataLoader(
-        test_dataset, batch_size=config.batch_size, shuffle=False, num_workers=args.thread)
+    # model
+    model = BILSTM(config, feature_voc.size, embedding[1] if embedding else config.embed_dim,
+                   label_voc.size, PAD, embedding[0])
 
     # train
-    train(data_loader_train, config, feature_vec, )
+    train(model, train_data, dev_data, test_data, feature_voc, label_voc, config)
 
 
 

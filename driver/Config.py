@@ -17,9 +17,9 @@ class Configurable(object):
                     config.set(section, k, v)
 
         self._config = config
-        # if not os.path.isdir(self.save_dir):
-        #     os.mkdir(self.save_dir)
-        # config.write(open(self.config_file, 'w'))
+        if not os.path.exists(self.save_model_path):
+            os.makedirs(self.save_model_path)
+        config.write(open(os.path.join(self.save_model_path, 'default.ini'), 'w'))
         print('Load config file successfully.\n')
         for section in config.sections():
             for k, v in config.items(section):
@@ -41,6 +41,10 @@ class Configurable(object):
     @property
     def test_file(self):
         return self._config.get('Data', 'test_file')
+
+    @property
+    def embedding_file(self):
+        return self._config.get('Data', 'embedding_file')
 
     @property
     def vocab_size(self):
@@ -88,10 +92,6 @@ class Configurable(object):
         return self._config.get('Save', 'test_pkl')
 
     @property
-    def embedding_file(self):
-        return self._config.get('Save', 'embedding_file')
-
-    @property
     def embedding_pkl(self):
         return self._config.get('Save', 'embedding_pkl')
 
@@ -117,20 +117,12 @@ class Configurable(object):
         return self._config.getint('Network', 'embed_dim')
 
     @property
-    def lstm(self):
-        return self._config.getint('Network', 'lstm')
-
-    @property
-    def layer_nums(self):
-        return self._config.getint('Network', 'layer_nums')
+    def num_layers(self):
+        return self._config.getint('Network', 'num_layers')
 
     @property
     def hidden_size(self):
         return self._config.getint('Network', 'hidden_size')
-
-    @property
-    def attention_size(self):
-        return self._config.getint('Network', 'attention_size')
 
     @property
     def dropout_embed(self):
@@ -144,10 +136,7 @@ class Configurable(object):
     def max_norm(self):
         return self._config.getfloat('Network', 'max_norm')
 
-    @property
-    def which_model(self):
-        return self._config.get('Network', 'which_model')
-
+# Optimizer
     @property
     def learning_algorithm(self):
         return self._config.get('Optimizer', 'learning_algorithm')
@@ -168,6 +157,7 @@ class Configurable(object):
     def clip_norm(self):
         return self._config.getfloat('Optimizer', 'clip_norm')
 
+# Run
     @property
     def epochs(self):
         return self._config.getint('Run', 'epochs')
@@ -175,10 +165,6 @@ class Configurable(object):
     @property
     def batch_size(self):
         return self._config.getint('Run', 'batch_size')
-
-    @property
-    def log_interval(self):
-        return self._config.getint('Run', 'log_interval')
 
     @property
     def test_interval(self):
