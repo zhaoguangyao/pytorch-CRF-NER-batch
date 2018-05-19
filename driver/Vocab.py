@@ -4,6 +4,8 @@ import numpy as np
 
 PAD, UNK = 0, 1
 PAD_S, UNK_S = '<pad>', '<unk>'
+START, STOP = -2, -1
+START_S, STOP_S = '<s>', '</s>'
 
 
 class VocabSrc:
@@ -11,7 +13,7 @@ class VocabSrc:
         # no fine tune
         self._id2extword = [PAD_S, UNK_S]
 
-        self.i2w = [PAD_S, UNK_S] + word_list
+        self.i2w = [PAD_S, UNK_S] + word_list + [START_S, STOP_S]
         self.w2i = {}
         for idx, word in enumerate(self.i2w):
             self.w2i[word] = idx
@@ -85,7 +87,7 @@ class VocabSrc:
         print('The dim of pretrained embeddings: ' + str(embedding_dim) + '\n')
 
         find_count = 0
-        embeddings = np.zeros((len(self.i2w), embedding_dim))
+        embeddings = np.random.normal(-0.25, 0.25, (len(self.i2w), embedding_dim)).astype(np.float64)
         with open(embfile, encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
@@ -95,6 +97,9 @@ class VocabSrc:
                     embeddings[self.w2i[values[0]]] = vector
                     embeddings[UNK] += vector
                     find_count += 1
+                # else:
+                #     vector = np.random.normal(-0.25, 0.25, embedding_dim).astype(np.float64)
+                #     embeddings[self.w2i[values[0]]] = vector
 
         print("The number of vocab word find in extend embedding is: ", str(find_count))
         print("The number of all vocab is: ", str(len(self.w2i)))
@@ -109,10 +114,35 @@ class VocabSrc:
         return (embeddings, embedding_dim)
 
 
+# class VocabTgt:
+#     def __init__(self, word_list):
+#         # 构建label voc, 从1开始编号, 0表示padding值
+#         self.i2w = [PAD] + word_list
+#         self.w2i = {}
+#         for idx, word in enumerate(self.i2w):
+#             self.w2i[word] = idx
+#         if len(self.w2i) != len(self.i2w):
+#             print("serious bug: words dumplicated, please check!")
+#
+#     def word2id(self, xx):
+#         if isinstance(xx, list):
+#             return [self.w2i.get(word, PAD) for word in xx]
+#         return self.w2i.get(xx, PAD)
+#
+#     def id2word(self, xx):
+#         if isinstance(xx, list):
+#             return [self.i2w[idx] for idx in xx]
+#         return self.i2w[xx]
+#
+#     @property
+#     def size(self):
+#         return len(self.i2w)
+
+
 class VocabTgt:
     def __init__(self, word_list):
         # 构建label voc, 从1开始编号, 0表示padding值
-        self.i2w = [PAD] + word_list
+        self.i2w = word_list + [START_S, STOP_S]
         self.w2i = {}
         for idx, word in enumerate(self.i2w):
             self.w2i[word] = idx
@@ -121,8 +151,8 @@ class VocabTgt:
 
     def word2id(self, xx):
         if isinstance(xx, list):
-            return [self.w2i.get(word, PAD) for word in xx]
-        return self.w2i.get(xx, PAD)
+            return [self.w2i[word] for word in xx]
+        return self.w2i[xx]
 
     def id2word(self, xx):
         if isinstance(xx, list):

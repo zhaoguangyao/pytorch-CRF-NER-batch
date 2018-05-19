@@ -47,7 +47,7 @@ if __name__ == '__main__':
     analysis(train_sentence_len, feature_dict, label_dict)
     if config.dev_file:
         print('\n')
-        dev_data, dev_sentence_len = read_word_line(config.test_file)
+        dev_data, dev_sentence_len = read_word_line(config.dev_file)
         analysis(dev_sentence_len)
     print('\n')
     test_data, test_sentence_len = read_word_line(config.test_file)
@@ -69,6 +69,6 @@ if __name__ == '__main__':
     label_voc = VocabTgt(label_list)
 
     # embedding
-    if config.embedding_file != '' and len(config.embedding_file) != 0:
+    if config.embedding_file != '':
         embedding = feature_voc.create_vocab_embs(config.embedding_file)
         pickle.dump(embedding, open(config.embedding_pkl, 'wb'))

@@ -2,6 +2,7 @@
 import codecs
 import pickle
 from collections import Counter
+from .Vocab import START_S, STOP_S
 
 
 def read_word_line(path, is_train=False):
@@ -10,15 +11,17 @@ def read_word_line(path, is_train=False):
     feature_dict = Counter()
     label_dict = Counter()
     with open(path, 'r', encoding='utf-8') as input_file:
-        sentence = []
-        label = []
+        sentence = [START_S]
+        label = [START_S]
         for line in input_file:
             line = line.strip()
             if len(line) == 0 or line == '':
+                sentence += [STOP_S]
+                label += [STOP_S]
                 data.append((sentence, label))
                 sentence_len[len(sentence)] += 1
-                sentence = []
-                label = []
+                sentence = [START_S]
+                label = [START_S]
             else:
                 strings = line.split(' ')
                 sentence.append(strings[0])

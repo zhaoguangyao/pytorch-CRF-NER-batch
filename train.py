@@ -5,7 +5,7 @@ import numpy
 import random
 import argparse
 from driver.MyIO import read_pkl
-from driver.Vocab import VocabSrc, VocabTgt, PAD
+from driver.Vocab import VocabSrc, VocabTgt, PAD, START, STOP
 from driver.Config import Configurable
 from driver.Train import train
 from TorchNN import *
@@ -28,8 +28,8 @@ if __name__ == '__main__':
 
     # parameters
     parse = argparse.ArgumentParser('NER')
-    parse.add_argument('--config_file', default='default.ini', type=str)
-    parse.add_argument('--thread', default=1, type=int)
+    parse.add_argument('--config_file', type=str, default='default.ini')
+    parse.add_argument('--thread', type=int, default=1)
     parse.add_argument('--use_cuda', action='store_true', default=False)
     args, extra_args = parse.parse_known_args()
 
@@ -42,7 +42,9 @@ if __name__ == '__main__':
 
     # load data
     train_data = read_pkl(config.train_pkl)
-    dev_data = read_pkl(config.dev_pkl)
+    dev_data = None
+    if config.dev_file:
+        dev_data = read_pkl(config.dev_pkl)
     test_data = read_pkl(config.test_pkl)
 
     feature_list = read_pkl(config.load_feature_voc)
@@ -55,40 +57,8 @@ if __name__ == '__main__':
         embedding = read_pkl(config.embedding_pkl)
 
     # model
-    model = BILSTM(config, feature_voc.size, embedding[1] if embedding else config.embed_dim,
-                   label_voc.size, PAD, embedding[0])
+    model = CRF(config, feature_voc.size, embedding[1] if embedding else config.embed_dim,
+                label_voc, PAD, START, STOP, embedding[0] if embedding else None)
 
     # train
     train(model, train_data, dev_data, test_data, feature_voc, label_voc, config)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
