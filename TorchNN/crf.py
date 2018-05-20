@@ -26,22 +26,21 @@ def log_sum_exp(vec):
 
 
 class CRF(nn.Module):
-    def __init__(self, config, embed_size, embed_dim, label_voc, padding_id, start,
-                 stop, embedding=None):
+    # def __init__(self, config, embed_size, embed_dim, label_voc, padding_id, start,
+    #              stop, embedding=None):
+    def __init__(self, config, embed_size, embed_dim, label_voc, padding_id, embedding=None):
         super(CRF, self).__init__()
         self.config = config
-        self.start = start
-        self.stop = stop
+        # self.start = start
+        # self.stop = stop
         self.label_voc = label_voc
 
         self.bilstm = BILSTM(config, embed_size, embed_dim, padding_id, embedding)
 
         self.hidden2tag = nn.Linear(config.hidden_size * 2, label_voc.size)
 
-        self.START_TAG_IDX, self.END_TAG_IDX = start, stop
+        # self.START_TAG_IDX, self.END_TAG_IDX = start, stop
         self.transfer_score = Parameter(torch.randn(label_voc.size, label_voc.size))
-        # self.transfer_score.data[self.START_TAG_IDX, :] = 0
-        # self.transfer_score.data[:, self.END_TAG_IDX] = 0
         init.xavier_normal(self.transfer_score)
 
     def _froward_alg(self, feats, input_length):
@@ -58,45 +57,48 @@ class CRF(nn.Module):
                 else:
                     m_list.append(0)
             mask_list.append(m_list)
-        mask = Variable(torch.ByteTensor(mask_list))
+        mask_np = np.array(mask_list)
+        mask = Variable(torch.from_numpy(mask_np).type(torch.FloatTensor))
         if self.config.use_cuda:
             mask = mask.cuda()
 
-
+        # 只是因为目前batch_size = 1
         feats = torch.squeeze(feats, 1)
+
         # feats = torch.transpose(feats, 0, 1).contiguous()
 
-        # 用来计算当前位置的得分
-        # init_alphas = Variable(torch.FloatTensor(self.label_size).fill_(0))
+        # batch个得分
+        # init_alphas = Variable(torch.FloatTensor(batch_size).fill_(0))
         # 保留每一个位置上的得分
-        scores = Variable(torch.FloatTensor(max_length, self.label_voc.size).fill_(0)).contiguous()
+        scores = Variable(torch.zeros(max_length, self.label_voc.size))
         scores[0] = feats[0]
-        for idx in range(1, max_length - 1):
-            if idx == 1:
-                scores[idx] = feats[idx] + self.transfer_score[self.start, :]
-            else:
-                for idy in range(self.label_voc.size):
-                    init_alphas = scores[idx - 1] + feats[idx] + self.transfer_score[:, idy]
-                    t = log_sum_exp(init_alphas.unsqueeze(0))
-                    scores[idx, idy] = t.select(0, 0).clone()
+        feats = feats.unsqueeze(2).expand(feats.size(0), feats.size(1), feats.size(1))
+        t = feats[0][0]
+        for idx in range(1, max_length):
+            for idy in range(self.label_voc.size):
+                init_alphas = scores[idx - 1] + feats[idx, idy] + self.transfer_score[:, idy]
+                scores[idx, idy] = log_sum_exp(init_alphas.unsqueeze(0))
 
-        init_alphas = scores[max_length - 1] + self.transfer_score[:, self.stop]
-        t = log_sum_exp(init_alphas.unsqueeze(0))
-        return t
+        t = scores[-1].unsqueeze(0)
+        sentence_score = log_sum_exp(t)
+        return sentence_score
 
-    def _score_gold(self, h, input_length, target):
+    def _score_gold(self, feats, input_length, target):
         # 先写batch = 1的，也就是targets的第一维=1
         max_length = input_length[0]
 
-        hh = torch.squeeze(h, 1).contiguous()
+        # 只是因为目前batch_size = 1
+        feats = torch.squeeze(feats, 1)
+        target = torch.squeeze(target, 1)
+
         score = Variable(torch.zeros(1))
-        score += hh[0, self.start]
-        pre_trans = self.start
+        score += feats[0, target.data[0]]
+        pre_trans = target.data[0]
         for idx in range(1, max_length):
-            score += hh[idx, target[idx].data[0]]
-            score += self.transfer_score[pre_trans, target[idx].data[0]].data[0]
-            pre_trans = target[idx].data[0]
-        return torch.exp(score)
+            score += feats[idx, target.data[idx]]
+            score += self.transfer_score[pre_trans, target.data[idx]]
+            pre_trans = target.data[idx]
+        return score
 
     def get_loss(self, h, input_length, target):
         sentence_score = self._froward_alg(h, input_length)
@@ -123,31 +125,31 @@ class CRF(nn.Module):
                 else:
                     m_list.append(0)
             mask_list.append(m_list)
-        mask = Variable(torch.ByteTensor(mask_list))
+        mask_np = np.array(mask_list)
+        mask = Variable(torch.from_numpy(mask_np).type(torch.FloatTensor))
         if self.config.use_cuda:
             mask = mask.cuda()
 
+        # 只是因为目前batch_size = 1
         feats = torch.squeeze(feats, 1)
+
         scores = Variable(torch.zeros(max_length, self.label_voc.size))
         scores[0] = feats[0]
-
-        path = np.zeros((max_length, self.label_voc.size))
-        for idx in range(1, max_length - 1):
-            if idx == 1:
-                scores[idx] = feats[idx] + self.transfer_score[self.start, :]
-            else:
-                for idy in range(self.label_voc.size):
-                    init_alphas = scores[idx - 1] + feats[idx] + self.transfer_score[:, idy]
-                    m_max = torch.max(init_alphas, 0)
-                    path[idx - 1][idy] = int(m_max[1].data[0])
-        init_alphas = scores[max_length - 1] + self.transfer_score[:, self.stop]
+        feats = feats.unsqueeze(2).expand(feats.size(0), feats.size(1), feats.size(1))
+        path = np.zeros((max_length, self.label_voc.size)) - 1
+        for idx in range(1, max_length):
+            for idy in range(self.label_voc.size):
+                init_alphas = scores[idx - 1] + feats[idx, idy] + self.transfer_score[:, idy]
+                m_max = torch.max(init_alphas, 0)
+                scores[idx, idy] = m_max[0]
+                path[idx][idy] = int(m_max[1].data[0])
+        init_alphas = scores[max_length - 1]
         m_max = torch.max(init_alphas, 0)
-        final_path = [self.stop, int(m_max[1].data[0])]
-        count = max_length - 3
+        final_path = [int(m_max[1].data[0])]
+        count = max_length - 1
         pos = int(m_max[1].data[0])
         while count >= 1:
             final_path.append(int(path[count][pos]))
             pos = int(path[count][pos])
             count -= 1
-        final_path.append(self.start)
         return list(reversed(final_path))

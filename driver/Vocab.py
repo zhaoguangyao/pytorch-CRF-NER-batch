@@ -13,7 +13,8 @@ class VocabSrc:
         # no fine tune
         self._id2extword = [PAD_S, UNK_S]
 
-        self.i2w = [PAD_S, UNK_S] + word_list + [START_S, STOP_S]
+        # self.i2w = [PAD_S, UNK_S] + word_list + [START_S, STOP_S]
+        self.i2w = [PAD_S, UNK_S] + word_list
         self.w2i = {}
         for idx, word in enumerate(self.i2w):
             self.w2i[word] = idx
@@ -142,7 +143,8 @@ class VocabSrc:
 class VocabTgt:
     def __init__(self, word_list):
         # 构建label voc, 从1开始编号, 0表示padding值
-        self.i2w = word_list + [START_S, STOP_S]
+        # self.i2w = word_list + [START_S, STOP_S]
+        self.i2w = word_list
         self.w2i = {}
         for idx, word in enumerate(self.i2w):
             self.w2i[word] = idx

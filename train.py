@@ -57,8 +57,10 @@ if __name__ == '__main__':
         embedding = read_pkl(config.embedding_pkl)
 
     # model
+    # model = CRF(config, feature_voc.size, embedding[1] if embedding else config.embed_dim,
+    #             label_voc, PAD, START, STOP, embedding[0] if embedding else None)
     model = CRF(config, feature_voc.size, embedding[1] if embedding else config.embed_dim,
-                label_voc, PAD, START, STOP, embedding[0] if embedding else None)
+                label_voc, PAD, embedding[0] if embedding else None)
 
     # train
     train(model, train_data, dev_data, test_data, feature_voc, label_voc, config)

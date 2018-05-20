@@ -11,17 +11,21 @@ def read_word_line(path, is_train=False):
     feature_dict = Counter()
     label_dict = Counter()
     with open(path, 'r', encoding='utf-8') as input_file:
-        sentence = [START_S]
-        label = [START_S]
+        # sentence = [START_S]
+        # label = [START_S]
+        sentence = []
+        label = []
         for line in input_file:
             line = line.strip()
             if len(line) == 0 or line == '':
-                sentence += [STOP_S]
-                label += [STOP_S]
+                # sentence += [STOP_S]
+                # label += [STOP_S]
                 data.append((sentence, label))
                 sentence_len[len(sentence)] += 1
-                sentence = [START_S]
-                label = [START_S]
+                # sentence = [START_S]
+                # label = [START_S]
+                sentence = []
+                label = []
             else:
                 strings = line.split(' ')
                 sentence.append(strings[0])

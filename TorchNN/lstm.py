@@ -15,13 +15,13 @@ class BILSTM(nn.Module):
 
         self.bilstm = nn.LSTM(embed_dim, config.hidden_size, dropout=config.dropout_rnn, bidirectional=True)
 
-    def forward(self, x, x_lengths):
-        x = self.embed(x)
-        x = self.dropout(x)
+    def forward(self, input_variable, input_lengths):
+        input_variable = self.embed(input_variable)
+        input_variable = self.dropout(input_variable)
 
-        x = pack_padded_sequence(x, x_lengths)
-        x, _ = self.bilstm(x)
-        x, _ = pad_packed_sequence(x)
-        return x
+        m_input = pack_padded_sequence(input_variable, input_lengths)
+        m_output, _ = self.bilstm(m_input)
+        m_output, _ = pad_packed_sequence(m_output)
+        return m_output
 
 

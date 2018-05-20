@@ -37,8 +37,8 @@ def train(model, train_data, dev_data, test_data, vocab_srcs, vocab_tgts, config
             feature, target, feature_lengths = pair_data_variable(batch, vocab_srcs, vocab_tgts, config)
 
             optimizer.zero_grad()
-            h = model(feature, feature_lengths)
-            loss = model.get_loss(h, feature_lengths, target)
+            h_output = model(feature, feature_lengths)
+            loss = model.get_loss(h_output, feature_lengths, target)
             loss_value = loss.data.cpu().numpy()
             loss.backward()
             optimizer.step()
@@ -93,6 +93,8 @@ def evaluate(model, data, step, vocab_srcs, vocab_tgts, config):
         predict = model._viterbi_decode(h, feature_lengths)
         label = label.view(len(predict))
         for idx, value in enumerate(predict):
+            if label.data[idx] != vocab_tgts.word2id('O'):
+                gold_number += 1
             if value == vocab_tgts.word2id('O'):
                 continue
             elif value == label.data[idx]:
@@ -100,9 +102,18 @@ def evaluate(model, data, step, vocab_srcs, vocab_tgts, config):
                 correct_number += 1
             else:
                 predict_number += 1
-    p = correct_number / predict_number
-    r = correct_number / gold_number
-    f_score = 2 * p * r / (p + r)
+    if predict_number == 0:
+        p = 0
+    else:
+        p = correct_number / predict_number
+    if gold_number == 0:
+        r = 0
+    else:
+        r = correct_number / gold_number
+    if (p + r) == 0:
+        f_score = 0
+    else:
+        f_score = 2 * p * r / (p + r)
     during_time = float(time.time() - start_time)
     print("\nevaluate result: ")
     print("Step:{}, f1:{:.4f}, time:{:.2f}"
