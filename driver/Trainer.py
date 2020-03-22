@@ -6,7 +6,7 @@ import subprocess
 import numpy as np
 
 import torch.optim as optim
-from driver.data_loader import create_batch_iter, pair_data_variable
+from driver.Loader import create_batch_iter, pair_data_variable
 
 
 def train(model, train_data, dev_data, test_data, vocab_srcs, vocab_tgts, config):

@@ -5,10 +5,10 @@ import numpy
 import random
 import argparse
 from TorchNN import *
-from driver.config import Configurable
-from driver.io import read_pkl
-from driver.vocab import PAD, VocabSrc, VocabTgt
-from driver.train_help import train
+from driver.Config import Configurable
+from driver.IO import read_pkl
+from driver.Vocab import PAD, VocabSrc, VocabTgt
+from driver.Trainer import train
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"

@@ -28,13 +28,10 @@ def pair_data_variable(batch, vocab_srcs, vocab_tgts, use_cuda):
     batch = sorted(batch, key=lambda b: len(b[0]), reverse=True)
     src_lengths = [len(batch[i][0]) for i in range(batch_size)]
     max_src_length = int(src_lengths[0])
-    # src_length = 0
-    # for i in range(batch_size):
-    #     src_length += src_lengths[i]
 
     src_words = torch.zeros([max_src_length, batch_size], dtype=torch.int64, requires_grad=False)
     tgt_words = torch.full([batch_size, max_src_length], vocab_tgts.size + 1, dtype=torch.int64, requires_grad=False)
-    src_mask = torch.zeros([batch_size, max_src_length], dtype=torch.uint8, requires_grad=False)
+    src_mask = torch.zeros([batch_size, max_src_length], dtype=torch.bool, requires_grad=False)
 
     # k = 0
     for idx, instance in enumerate(batch):

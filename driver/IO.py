@@ -113,9 +113,9 @@ def read_word_line(path, is_train=False):
                 if len(strings) != 2:
                     print("金标有问题")
                     exit(0)
-                words.append(strings[0])
+                words.append(strings[0].lower())
                 labels.append(strings[-1])
-                word_dict[strings[0]] += 1
+                word_dict[strings[0].lower()] += 1
                 label_dict[strings[-1]] += 1
 
         if len(words) != 0:

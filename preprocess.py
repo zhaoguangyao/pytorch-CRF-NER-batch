@@ -3,9 +3,9 @@ import numpy
 import pickle
 import random
 import argparse
-from driver.config import Configurable
-from driver.io import read_word_line
-from driver.vocab import VocabSrc, VocabTgt
+from driver.Config import Configurable
+from driver.IO import read_word_line
+from driver.Vocab import VocabSrc, VocabTgt
 
 
 if __name__ == '__main__':
