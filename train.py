@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import torch
-import numpy
+import numpy as np
 import random
 import argparse
 from TorchNN import *
@@ -17,14 +17,18 @@ os.environ["OMP_NUM_THREADS"] = "1"
 
 if __name__ == '__main__':
     # random
-    torch.manual_seed(666)
-    torch.cuda.manual_seed(666)
-    random.seed(666)
-    numpy.random.seed(666)
+    seed = 666
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
 
     # gpu
     gpu = torch.cuda.is_available()
     print("GPU available: ", gpu)
+    torch.backends.cudnn.enabled = False
     print("CuDNN: ", torch.backends.cudnn.enabled)
 
     # parameters
@@ -64,7 +68,6 @@ if __name__ == '__main__':
                 PAD, label_voc.size + 2,
                 embedding[0] if embedding else None)
     if config.use_cuda:
-        torch.backends.cudnn.enabled = True
         model = model.cuda()
 
     # train

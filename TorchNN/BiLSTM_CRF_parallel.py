@@ -41,7 +41,26 @@ def log_sum_exp3d(vec, m_size):
     """
     _, idx = torch.max(vec, 1)  # B * 1 * M
     max_score = torch.gather(vec, 1, idx.view(-1, 1, m_size)).view(-1, 1, m_size)  # B * M
-    return max_score.view(-1, m_size) + torch.log(torch.sum(torch.exp(vec - max_score.expand_as(vec)), 1)).view(-1, m_size)  # B * M
+    return max_score.view(-1, m_size) + \
+           torch.log(torch.sum(torch.exp(vec - max_score.expand_as(vec)), 1)).view(-1, m_size)  # B * M
+
+
+def log_sum_exp_song(scores, label_nums):
+    """
+    params:
+        scores: variable (batch_size, label_nums, label_nums)
+        label_nums
+    return:
+        variable (batch_size, label_nums)
+    """
+    batch_size = scores.size(0)
+    max_scores, max_index = torch.max(scores, dim=1)
+    ##### max_index: variable (batch_size, label_nums)
+    ##### max_scores: variable (batch_size, label_nums)
+    # max_scores = torch.gather(scores, 1, max_index.view(-1, 1, label_nums)).view(-1, 1, label_nums)
+    max_score_broadcast = max_scores.unsqueeze(1).view(batch_size, 1, label_nums).expand(batch_size, label_nums, label_nums)
+    return max_scores.view(batch_size, label_nums) + torch.log(torch.sum(torch.exp(scores - max_score_broadcast), 1)).view(batch_size, label_nums)
+
 
 
 class CRFParallel(nn.Module):
@@ -58,7 +77,7 @@ class CRFParallel(nn.Module):
         self.hidden2tag = nn.Linear(config.hidden_size * 2, label_size)
 
         self.START_TAG, self.STOP_TAG = label_size - 2, label_size - 1
-        self.transitions = nn.Parameter(torch.randn(label_size, label_size))
+        self.transitions = nn.Parameter(torch.randn(label_size, label_size), requires_grad=True)
         self.transitions.data[:, self.START_TAG] = -10000
         self.transitions.data[self.STOP_TAG, :] = -10000
 

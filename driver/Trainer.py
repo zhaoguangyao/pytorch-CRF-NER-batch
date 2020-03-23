@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 import time
 import torch
 import subprocess
@@ -31,7 +32,7 @@ def train(model, train_data, dev_data, test_data, vocab_srcs, vocab_tgts, config
         batch_iter = 0
         for batch in create_batch_iter(train_data, config.batch_size, shuffle=True):
             start_time = time.time()
-            batch, feature, target, lengths, mask = pair_data_variable(batch, vocab_srcs, vocab_tgts, config)
+            batch, feature, target, lengths, mask = pair_data_variable(batch, vocab_srcs, vocab_tgts, config.use_cuda)
             model.train()
             optimizer.zero_grad()
             loss = model.neg_log_likelihood(feature, target, lengths, mask)
@@ -70,38 +71,41 @@ def train(model, train_data, dev_data, test_data, vocab_srcs, vocab_tgts, config
 
 
 def evaluate_batch(model, batch, feature, lengths, mask, vocab_tgts, config):
-    model.eval()
 
     _, tags = model(feature, lengths, mask)
-    # predict_labels = []
-    # for tag in tags:
-    #     predict_labels.append(vocab_tgts.id2word(tag))
 
     # 输出到文件
-    path = os.path.join(config.model_path, "batch.txt")
-    with open(path, 'w', encoding='utf-8') as output_file:
+    ori_path = os.path.join(config.model_path, "batch.txt")
+    with open(ori_path, 'w', encoding='utf-8') as output_file:
         for idx, seq in enumerate(batch):
             for idj in range(len(batch[idx][0])):
                 output_file.write(batch[idx][0][idj] + " ")
                 output_file.write(batch[idx][1][idj] + " ")
                 output_file.write(vocab_tgts.id2word(tags[idx][idj].item()) + "\n")
             output_file.write('\n')
-
-    p = subprocess.check_output("perl ./driver/conlleval.pl < " + path, shell=True)
-    output = p.decode("utf-8")
+    m_system = sys.platform
+    unix_path = os.path.join(config.model_path, 'unix_batch.txt')
+    if m_system == 'win32':
+        sp = subprocess.check_call("perl -p -e 's/\\r$//' < " + ori_path + " > " + unix_path, shell=True)
+        assert sp == 0
+    elif m_system == 'linux':
+        sp = subprocess.check_call('cp ' + ori_path + ' ' + unix_path, shell=True)
+        assert sp == 0
+    else:
+        print('没有使用过这个系统')
+    perl_res = subprocess.check_output("perl ./driver/conlleval.pl < " + unix_path, shell=True)
+    output = perl_res.decode("utf-8")
     line2 = output.split('\n')[1]
     fours = line2.split(';')
     accuracy = float(fours[0][-7:-1])
-
-    model.train()
     return accuracy
 
 
 def evaluate(model, data, step, vocab_srcs, vocab_tgts, dev_test, config):
     model.eval()
 
-    path = os.path.join(config.model_path, dev_test + "_out_" + str(step) + ".txt")
-    with open(path, 'w', encoding='utf-8') as output_file:
+    ori_path = os.path.join(config.model_path, dev_test + "_ori_" + str(step) + ".txt")
+    with open(ori_path, 'w', encoding='utf-8') as output_file:
         for batch in create_batch_iter(data, config.batch_size):
             batch, feature, target, lengths, mask = pair_data_variable(batch, vocab_srcs, vocab_tgts, config)
             _, tags = model(feature, lengths, mask)
@@ -114,7 +118,19 @@ def evaluate(model, data, step, vocab_srcs, vocab_tgts, dev_test, config):
                     output_file.write(vocab_tgts.id2word(tags[idx][idj].item()) + "\n")
                 output_file.write("\n")
 
-    p = subprocess.check_output("perl ./driver/conlleval.pl < " + path, shell=True)
+    m_system = sys.platform
+    unix_path = os.path.join(config.model_path, dev_test + "_unix_" + str(step) + ".txt")
+    if m_system == 'win32':
+        sp = subprocess.check_call("perl -p -e 's/\\r$//' < " + ori_path + " > " + unix_path, shell=True)
+        assert sp == 0
+        os.remove(ori_path)
+    elif m_system == 'linux':
+        sp = subprocess.check_call('mv ' + ori_path + ' ' + unix_path, shell=True)
+        assert sp == 0
+    else:
+        print('没有使用过这个系统')
+
+    p = subprocess.check_output("perl ./driver/conlleval.pl < " + unix_path, shell=True)
     output = p.decode("utf-8")
     line2 = output.split('\n')[1]
     fours = line2.split(';')

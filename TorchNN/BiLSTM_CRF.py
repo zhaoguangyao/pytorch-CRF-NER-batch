@@ -18,7 +18,6 @@ def log_sum_exp(vec):
     return max_score + \
         torch.log(torch.sum(torch.exp(vec - max_score_broadcast)))
 
-
 class CRF(nn.Module):
     def __init__(self, config, num_embeddings, embedding_dim, padding_idx, label_size, embeddings):
         super(CRF, self).__init__()
@@ -33,7 +32,7 @@ class CRF(nn.Module):
         self.hidden2tag = nn.Linear(config.hidden_size * 2, label_size)
 
         self.START_TAG, self.STOP_TAG = label_size - 2, label_size - 1
-        self.transitions = nn.Parameter(torch.randn(label_size, label_size))
+        self.transitions = nn.Parameter(torch.randn(label_size, label_size), requires_grad=True)
         self.transitions.data[self.START_TAG, :] = -10000
         self.transitions.data[:, self.STOP_TAG] = -10000
 
