@@ -21,10 +21,11 @@ class CRF(nn.Module):
     """
         CRF
     """
-    def __init__(self, target_size):
+    def __init__(self, target_size, config):
 
         super(CRF, self).__init__()
         self.target_size = target_size
+        self.config = config
 
         # init transitions
         self.START_TAG, self.STOP_TAG = -2, -1
