@@ -107,7 +107,7 @@ def evaluate(model, data, step, vocab_srcs, vocab_tgts, dev_test, config):
     ori_path = os.path.join(config.model_path, dev_test + "_ori_" + str(step) + ".txt")
     with open(ori_path, 'w', encoding='utf-8') as output_file:
         for batch in create_batch_iter(data, config.batch_size):
-            batch, feature, target, lengths, mask = pair_data_variable(batch, vocab_srcs, vocab_tgts, config)
+            batch, feature, target, lengths, mask = pair_data_variable(batch, vocab_srcs, vocab_tgts, config.use_cuda)
             _, tags = model(feature, lengths, mask)
 
             # 输出到文件

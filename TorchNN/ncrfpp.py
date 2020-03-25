@@ -195,6 +195,8 @@ class CRF(nn.Module):
         """ convert tag value into a new format, recorded label bigram information to index """
         # new_tags = Variable(torch.LongTensor(batch_size, seq_len))
         new_tags = torch.empty(batch_size, seq_len, requires_grad=True).long()
+        if self.use_cuda:
+            new_tags = new_tags.cuda()
         for idx in range(seq_len):
             if idx == 0:
                 new_tags[:, 0] = (tag_size - 2) * tag_size + tags[:, 0]
