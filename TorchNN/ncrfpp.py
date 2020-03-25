@@ -1,5 +1,4 @@
 import torch
-from torch.autograd.variable import Variable
 import torch.nn as nn
 
 
@@ -154,6 +153,8 @@ class CRF(nn.Module):
         last_values = last_partition.expand(batch_size, tag_size, tag_size) + self.transitions.view(1,tag_size, tag_size).expand(batch_size, tag_size, tag_size)
         _, last_bp = torch.max(last_values, 1)
         pad_zero = torch.zeros(batch_size, tag_size, requires_grad=True).long()
+        if self.config.use_cuda:
+            pad_zero = pad_zero.cuda()
         back_points.append(pad_zero)
         back_points = torch.cat(back_points).view(seq_len, batch_size, tag_size)
 
@@ -167,6 +168,8 @@ class CRF(nn.Module):
         """ decode from the end, padded position ids are 0, which will be filtered if following evaluation """
         # decode_idx = Variable(torch.LongTensor(seq_len, batch_size))
         decode_idx = torch.empty(seq_len, batch_size, requires_grad=True).long()
+        if self.config.use_cuda:
+            decode_idx = decode_idx.cuda()
         decode_idx[-1] = pointer.detach()
         for idx in range(len(back_points)-2, -1, -1):
             pointer = torch.gather(back_points[idx], 1, pointer.contiguous().view(batch_size, 1))
@@ -196,7 +199,7 @@ class CRF(nn.Module):
         """ convert tag value into a new format, recorded label bigram information to index """
         # new_tags = Variable(torch.LongTensor(batch_size, seq_len))
         new_tags = torch.empty(batch_size, seq_len, requires_grad=True).long()
-        if self.use_cuda:
+        if self.config.use_cuda:
             new_tags = new_tags.cuda()
         for idx in range(seq_len):
             if idx == 0:
