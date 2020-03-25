@@ -17,7 +17,7 @@ class BiLSTM_NCRFPP(nn.Module):
         self.lstm = nn.LSTM(embedding_dim, config.hidden_size, num_layers=config.num_layers, bidirectional=True)
         self.hidden2tag = nn.Linear(config.hidden_size * 2, label_size)
 
-        self.ncrfpp = CRF(target_size=label_size - 2)
+        self.ncrfpp = CRF(target_size=label_size - 2, config=config)
 
     def _get_lstm_features(self, feats, lengths):
         """
