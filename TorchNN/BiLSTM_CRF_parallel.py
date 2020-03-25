@@ -218,7 +218,7 @@ class CRFParallel(nn.Module):
         back_points = []
         partition_history = []
 
-        mask = (1 - mask.long()).byte()
+        mask = (1 - mask.byte()).bool()
 
         _, inivalues = seq_iter.__next__()
         partition = inivalues[:, self.START_TAG, :].clone().view(batch_size, label_size)
@@ -284,5 +284,5 @@ class CRFParallel(nn.Module):
 
     def forward(self, feats, lengths, mask):
         lstm_feats = self._get_lstm_features(feats, lengths)
-        score, tag_seq = self._viterbi_decode(lstm_feats, mask)
-        return score, tag_seq
+        path_score, best_path = self._viterbi_decode(lstm_feats, mask)
+        return path_score, best_path

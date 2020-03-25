@@ -63,7 +63,7 @@ if __name__ == '__main__':
         embedding = read_pkl(config.embedding_pkl)
 
     # model
-    model = CRFParallel(config, feature_voc.size,
+    model = BiLSTM_NCRFPP(config, feature_voc.size,
                 embedding[1] if embedding else config.embed_dim,
                 PAD, label_voc.size + 2,
                 embedding[0] if embedding else None)
